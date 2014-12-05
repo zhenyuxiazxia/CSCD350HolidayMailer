@@ -13,6 +13,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Button;
@@ -58,11 +59,52 @@ public class ContactsWindow {
 		shell.addDisposeListener(this.ds);
 		
 		Button addButton = new Button(shell, SWT.NONE);
+		addButton.addSelectionListener(new SelectionAdapter() 
+		{
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				AddWindowDialog ad=new AddWindowDialog(shell, SWT.NONE);
+				String[] newContact=ad.open();
+				if(newContact!=null)
+				{
+					Recipient r=new Recipient(newContact[0], newContact[1], newContact[2], Integer.parseInt(newContact[3]));
+					System.out.println("Recipient "+r.getFirstName()+" "+r.getLastName()+" received from add dialoge!");
+				}
+			}
+		});
 		addButton.setToolTipText("Add a new contact");
 		addButton.setBounds(10, 145, 75, 25);
 		addButton.setText("Add");
 		
 		Button deleteButton = new Button(shell, SWT.NONE);
+		deleteButton.addSelectionListener(new SelectionAdapter() 
+		{
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				MessageBox deleteMessage;
+				if(noneSelected())
+				{
+					deleteMessage=new MessageBox(shell);
+					deleteMessage.setMessage("Must Select a contact first");
+					deleteMessage.open();
+				}
+				else
+				{
+					deleteMessage=new MessageBox(shell, SWT.YES|SWT.NO);
+					deleteMessage.setMessage("Are you sure you want to delete the selected contacts? They will be permanently deleted from the database.");
+					if (deleteMessage.open()==SWT.YES)
+					{
+						System.out.println("ok I'm deleting your contacts");
+						//delete items from table
+						//delete selected items from database
+						//query database
+						//add items back into table
+					}
+				}
+			}
+		});
 		deleteButton.setToolTipText("Delete a contact");
 		deleteButton.setBounds(10, 176, 75, 25);
 		deleteButton.setText("Delete");
@@ -156,6 +198,15 @@ public class ContactsWindow {
 		newitem4.setText(1, "Xia");
 		newitem4.setText(2, "zxia@eagles.ewu.edu");
 		newitem4.setText(3, "yes");
+	}
+
+	protected boolean noneSelected() 
+	{
+		TableItem [] items=contactTable.getItems();
+		for (int i=0; i<items.length; i++)
+			if(items[i].getChecked())
+				return false;
+		return true;
 	}
 
 	public void setDisposeListener(DisposeListener ds2) 

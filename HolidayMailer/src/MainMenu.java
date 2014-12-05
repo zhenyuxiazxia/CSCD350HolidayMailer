@@ -1,5 +1,7 @@
 
 
+import java.sql.SQLException;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -27,8 +29,14 @@ public class MainMenu
 		try 
 		{
 			MainMenu window = new MainMenu();
+			SQLiteMailerJDB database=new SQLiteMailerJDB();
+			
 			window.open();
 		} 
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
 		catch (Exception e) 
 		{
 			e.printStackTrace();

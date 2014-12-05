@@ -23,7 +23,7 @@ public class MailWindow
 	private Text messageTextBox;
 	private DisposeListener ds=null;
 	private ArrayList<String> toList=null;
-	
+	private boolean canOpen=true;
 
 	/**
 	 * Open the window.
@@ -65,12 +65,7 @@ public class MailWindow
 		toTextBox.setBounds(10, 28, 401, 21);
 		if (toList!=null)
 		{
-			String text="";
-			for (int i=0; i<toList.size();i++)
-			{
-				text+=toList.get(i)+";";
-			}
-			toTextBox.setText(text);
+			addAddresses();
 		}
 		Label lblTo = new Label(shlSuperUltraAlpha, SWT.NONE);
 		lblTo.setBounds(10, 7, 55, 15);
@@ -87,7 +82,8 @@ public class MailWindow
 		messageTextBox.setBounds(10, 125, 401, 126);
 		
 		Button btnAttach = new Button(shlSuperUltraAlpha, SWT.NONE);
-		btnAttach.addSelectionListener(new SelectionAdapter() {
+		btnAttach.addSelectionListener(new SelectionAdapter() 
+		{
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
@@ -108,20 +104,30 @@ public class MailWindow
 		btnAttach.setBounds(10, 289, 75, 25);
 		btnAttach.setText("Attach");
 		
-		Button btnNormalEmail = new Button(shlSuperUltraAlpha, SWT.RADIO);
-		btnNormalEmail.setBounds(119, 271, 90, 16);
-		btnNormalEmail.setText("Normal email");
-		
-		Button btnCoverEmail = new Button(shlSuperUltraAlpha, SWT.RADIO);
-		btnCoverEmail.addSelectionListener(new SelectionAdapter() 
+		SelectionAdapter sa=new SelectionAdapter()
 		{
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				CoverEmailDialog d=new CoverEmailDialog(shlSuperUltraAlpha, SWT.OK|SWT.CANCEL);
-				d.open();
+				if (canOpen)
+				{
+					canOpen=false;
+					CoverEmailDialog d=new CoverEmailDialog(shlSuperUltraAlpha, SWT.OK|SWT.CANCEL);
+					toList=d.open();
+					if(toList!=null)
+					{
+						addAddresses();
+					}
+					canOpen=true;
+				}
 			}
-		});
+		};
+		final Button btnNormalEmail = new Button(shlSuperUltraAlpha, SWT.RADIO);
+		btnNormalEmail.setBounds(119, 271, 90, 16);
+		btnNormalEmail.setText("Normal email");
+		btnNormalEmail.addSelectionListener(sa);
+		final Button btnCoverEmail = new Button(shlSuperUltraAlpha, SWT.RADIO);
+		btnCoverEmail.addSelectionListener(sa);
 		btnCoverEmail.setBounds(119, 293, 90, 16);
 		btnCoverEmail.setText("Cover email");
 		
@@ -141,9 +147,10 @@ public class MailWindow
 					m.setMessage("Message is empty!");
 					m.open();
 				}
-				else
+				else if (!btnCoverEmail.getSelection() && !btnNormalEmail.getSelection())
 				{
-					//do stuff
+					m.setMessage("Select either normal email or cover email");
+					m.open();
 				}
 			}
 		});
@@ -151,6 +158,15 @@ public class MailWindow
 		sendButton.setBounds(282, 272, 129, 42);
 		sendButton.setText("Send");
 		
+	}
+
+	private void addAddresses() {
+		String text="";
+		for (int i=0; i<toList.size();i++)
+		{
+			text+=toList.get(i)+";";
+		}
+		toTextBox.setText(text);
 	}
 
 	public void setDisposeListener(DisposeListener ds) 
