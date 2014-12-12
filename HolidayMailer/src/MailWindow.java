@@ -1,6 +1,8 @@
 import java.io.File;
 import java.util.ArrayList;
 
+import javax.mail.MessagingException;
+
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.MessageBox;
@@ -12,6 +14,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 
 public class MailWindow 
@@ -24,8 +27,10 @@ public class MailWindow
 	private Text messageTextBox;
 	private DisposeListener ds=null;
 	private ArrayList<String> toList=null;
+	protected UserInfo user;
 	private boolean canOpen=true;
-
+	protected JavaMailer mailer;
+	protected String attachmentPath=null;
 	/**
 	 * Open the window.
 	 * @wbp.parser.entryPoint
@@ -36,6 +41,7 @@ public class MailWindow
 		createContents();
 		shlSuperUltraAlpha.open();
 		shlSuperUltraAlpha.layout();
+		mailer=new JavaMailer();
 		while (!shlSuperUltraAlpha.isDisposed()) 
 		{
 			if (!display.readAndDispatch()) 
@@ -51,8 +57,8 @@ public class MailWindow
 	protected void createContents() 
 	{
 		shlSuperUltraAlpha = new Shell();
-		shlSuperUltraAlpha.setText("Holiday Mailer");
-		shlSuperUltraAlpha.setSize(575, 360);
+		shlSuperUltraAlpha.setText("New Message");
+		shlSuperUltraAlpha.setSize(444, 360);
 		if(ds!=null)
 			shlSuperUltraAlpha.addDisposeListener(this.ds);
 		subjectTextBox = new Text(shlSuperUltraAlpha, SWT.BORDER);
@@ -97,6 +103,7 @@ public class MailWindow
 					String filename=f.getName();
 					//add attachment to file
 					attachmentLabel.setText(filename);
+					attachmentPath=file;
 				}
 				
 			}
@@ -104,6 +111,13 @@ public class MailWindow
 		btnAttach.setToolTipText("Add an attachment");
 		btnAttach.setBounds(10, 289, 75, 25);
 		btnAttach.setText("Attach");
+		
+		final Button btnNormalEmail = new Button(shlSuperUltraAlpha, SWT.RADIO);
+		btnNormalEmail.setBounds(119, 271, 90, 16);
+		btnNormalEmail.setText("Normal email");
+		final Button btnCoverEmail = new Button(shlSuperUltraAlpha, SWT.RADIO);
+		btnCoverEmail.setBounds(119, 293, 90, 16);
+		btnCoverEmail.setText("Cover email");
 		
 		SelectionAdapter sa=new SelectionAdapter()
 		{
@@ -119,18 +133,21 @@ public class MailWindow
 					{
 						addAddresses();
 					}
+					if(btnCoverEmail.getSelection())
+					{
+						messageTextBox.setText(user.getCoverEmailText());
+					}
 					canOpen=true;
 				}
 			}
 		};
-		final Button btnNormalEmail = new Button(shlSuperUltraAlpha, SWT.RADIO);
-		btnNormalEmail.setBounds(119, 271, 90, 16);
-		btnNormalEmail.setText("Normal email");
-		btnNormalEmail.addSelectionListener(sa);
-		final Button btnCoverEmail = new Button(shlSuperUltraAlpha, SWT.RADIO);
+		//Add Selection listeners to radio buttons
 		btnCoverEmail.addSelectionListener(sa);
-		btnCoverEmail.setBounds(119, 293, 90, 16);
-		btnCoverEmail.setText("Cover email");
+		btnNormalEmail.addSelectionListener(sa);
+		
+		final Label statusLabel = new Label(shlSuperUltraAlpha, SWT.NONE);
+		statusLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
+		statusLabel.setBounds(118, 257, 231, 15);
 		
 		Button sendButton = new Button(shlSuperUltraAlpha, SWT.NONE);
 		sendButton.addSelectionListener(new SelectionAdapter() 
@@ -153,6 +170,43 @@ public class MailWindow
 				{
 					m.setMessage("Select either normal email or cover email");
 					m.open();
+				}
+				else
+				{
+					PasswordMessageBox enterPassword=new PasswordMessageBox(shlSuperUltraAlpha, SWT.NONE, user.getEmailAddress());
+					String password=enterPassword.open();
+					ArrayList<String> recipientList=new ArrayList<String> ();
+					getRecipients(recipientList);
+					mailer.authenticate(user.getService(), user.getEmailAddress(), password);
+					try
+					{
+						statusLabel.setText("Please wait while the messages are sent");
+						mailer.send(subjectTextBox.getText(), messageTextBox.getText(), user.getEmailAddress(), recipientList, attachmentPath);
+						statusLabel.setText("Messages successfully sent");
+					}
+					catch (MessagingException ex)
+					{
+						MessageBox message=new MessageBox(shlSuperUltraAlpha, SWT.NONE);
+						message.setMessage("Incorrect email and password. Messages were not sent");
+						message.open();
+						statusLabel.setText("Error sending messages");
+					}
+				}
+			}
+
+			private void getRecipients(ArrayList<String> recipientList) 
+			{
+				String [] people=toTextBox.getText().split(";");
+				for (int i=0; i<people.length; i++)
+				{
+					if(people[i].matches("(?!\\..*|.*\\.@|.*\\.\\..*)([\\w\\!#\\$%&'\\*\\+\\-/\\=\\?\\^_`\\{\\|\\}~\\.])+@([\\w\\-\\.]+)(\\.\\w{2,})+"))
+						recipientList.add(people[i]);
+					else
+					{
+						MessageBox ms=new MessageBox(shlSuperUltraAlpha);
+						ms.setMessage("email not sent to " + people[i] + "because it was not a valid email address");
+						ms.open();
+					}
 				}
 			}
 		});
@@ -188,5 +242,10 @@ public class MailWindow
 	public void setDatabase(SQLiteMailerJDB database) 
 	{
 		this.database=database;
+	}
+
+	public void setUserInfo(UserInfo user) 
+	{
+		this.user=user;
 	}
 }

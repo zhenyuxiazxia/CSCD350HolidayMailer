@@ -1,6 +1,6 @@
+import java.io.IOException;
+
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
@@ -19,11 +19,8 @@ public class SettingsWindow
 	protected Shell shlSuperUltraAlpha;
 	private Text emailTextBox;
 	private DisposeListener ds;
-	private Text text;
-	private Text txtMerryChristmasFrom;
+	private Text coverEmailText;
 	protected MusicPlayer mp;
-	protected JavaMailer mailer;
-
 
 	/**
 	 * Open the window.
@@ -52,24 +49,41 @@ public class SettingsWindow
 	{
 		shlSuperUltraAlpha = new Shell();
 		shlSuperUltraAlpha.setSize(450, 300);
-		shlSuperUltraAlpha.setText("Super Ultra Alpha Holiday Mailer Deluxe Plus EX Game of the Year edition");
+		shlSuperUltraAlpha.setText("Settings");
 		shlSuperUltraAlpha.addDisposeListener(this.ds);
 		
 		final Combo providerCombo = new Combo(shlSuperUltraAlpha, SWT.READ_ONLY);
 		providerCombo.setItems(new String[] {"Gmail", "Yahoo", "Hotmail"});
-		providerCombo.setBounds(10, 42, 91, 23);
+		providerCombo.setBounds(10, 104, 91, 23);
 		
 		Label lblEmailProvider = new Label(shlSuperUltraAlpha, SWT.NONE);
-		lblEmailProvider.setBounds(10, 21, 91, 15);
+		lblEmailProvider.setBounds(10, 83, 91, 15);
 		lblEmailProvider.setText("Email provider");
 		
 		Label lblEmailAddress = new Label(shlSuperUltraAlpha, SWT.NONE);
-		lblEmailAddress.setBounds(10, 83, 91, 15);
+		lblEmailAddress.setBounds(10, 143, 91, 15);
 		lblEmailAddress.setText("Email Address");
 		
 		emailTextBox = new Text(shlSuperUltraAlpha, SWT.BORDER);
-		emailTextBox.setBounds(10, 104, 179, 21);
+		emailTextBox.setBounds(10, 165, 179, 21);
 		
+		coverEmailText = new Text(shlSuperUltraAlpha, SWT.BORDER);
+		coverEmailText.setToolTipText("Write the text that will appear for your cover emails");
+		coverEmailText.setText("Merry Christmas from Bits Please!");
+		coverEmailText.setBounds(222, 104, 202, 147);
+		
+		try
+		{
+			UserInfo info=UserInfo.load();
+			emailTextBox.setText(info.getEmailAddress());
+			coverEmailText.setText(info.getCoverEmailText());
+			providerCombo.setText(info.getProvider());
+			//providerCombo.set
+		}
+		catch (IOException ex)
+		{
+			//no preset settings
+		}
 		Button enterButton = new Button(shlSuperUltraAlpha, SWT.NONE);
 		enterButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -88,28 +102,24 @@ public class SettingsWindow
 					mb.setMessage("Please select an email provider");
 					mb.open();
 				}
-				else if(!userEmail.contains(provider.toLowerCase()) || !userEmail.contains(provider.toUpperCase()))
+				else if(!userEmail.contains(provider.toLowerCase()) && !userEmail.contains(provider.toUpperCase()))
 				{
 					mb.setMessage("email address does not match provider");
+					mb.open();
+				}
+				else
+				{
+					UserInfo newInfo=new UserInfo(userEmail, provider, coverEmailText.getText());
+					newInfo.save();
+					mb=new MessageBox(shlSuperUltraAlpha, SWT.OK);
+					mb.setMessage("Settings successfully saved");
 					mb.open();
 				}
 			}
 		});
 		enterButton.setToolTipText("Enter email address");
-		enterButton.setBounds(10, 192, 75, 25);
+		enterButton.setBounds(10, 202, 75, 25);
 		enterButton.setText("Enter");
-		
-		text = new Text(shlSuperUltraAlpha, SWT.BORDER | SWT.PASSWORD);
-		text.setBounds(10, 165, 179, 21);
-		
-		Label lblPassword = new Label(shlSuperUltraAlpha, SWT.NONE);
-		lblPassword.setBounds(10, 144, 55, 15);
-		lblPassword.setText("Password");
-		
-		txtMerryChristmasFrom = new Text(shlSuperUltraAlpha, SWT.BORDER);
-		txtMerryChristmasFrom.setToolTipText("Write the text that will appear for your cover emails");
-		txtMerryChristmasFrom.setText("Merry Christmas from Bits Please!");
-		txtMerryChristmasFrom.setBounds(222, 104, 202, 147);
 		
 		Label lblCoverEmailText = new Label(shlSuperUltraAlpha, SWT.NONE);
 		lblCoverEmailText.setBounds(222, 83, 91, 15);
@@ -168,9 +178,5 @@ public class SettingsWindow
 		
 	}
 
-	public void setMailer(JavaMailer mailer) 
-	{
-		this.mailer=mailer;
-		
-	}
+
 }

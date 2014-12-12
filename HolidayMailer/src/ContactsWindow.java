@@ -1,25 +1,20 @@
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.custom.CCombo;
+import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.ExpandBar;
-import org.eclipse.swt.widgets.ExpandItem;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.widgets.Text;
@@ -28,7 +23,7 @@ import org.eclipse.swt.widgets.Label;
 
 public class ContactsWindow {
 
-	protected Shell shell;
+	protected Shell shlContacts;
 	private Table contactTable;
 	private DisposeListener ds;
 	protected SQLiteMailerJDB database;
@@ -43,9 +38,9 @@ public class ContactsWindow {
 	{
 		Display display = Display.getDefault();
 		createContents();
-		shell.open();
-		shell.layout();
-		while (!shell.isDisposed()) 
+		shlContacts.open();
+		shlContacts.layout();
+		while (!shlContacts.isDisposed()) 
 		{
 			if (!display.readAndDispatch()) 
 			{
@@ -58,18 +53,18 @@ public class ContactsWindow {
 	 * Create contents of the window.
 	 */
 	protected void createContents() {
-		shell = new Shell();
-		shell.setSize(470, 300);
-		shell.setText("SWT Application");
-		shell.addDisposeListener(this.ds);
+		shlContacts = new Shell();
+		shlContacts.setSize(470, 300);
+		shlContacts.setText("Contacts");
+		shlContacts.addDisposeListener(this.ds);
 		
-		Button addButton = new Button(shell, SWT.NONE);
+		Button addButton = new Button(shlContacts, SWT.NONE);
 		addButton.addSelectionListener(new SelectionAdapter() 
 		{
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				AddWindowDialog ad=new AddWindowDialog(shell, SWT.NONE);
+				AddWindowDialog ad=new AddWindowDialog(shlContacts, SWT.NONE);
 				String[] newContact=ad.open();
 				if(newContact!=null)
 				{
@@ -81,8 +76,9 @@ public class ContactsWindow {
 						addContactsToTable();
 					} catch (SQLException e1) 
 					{
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
+						MessageBox error=new MessageBox(shlContacts, SWT.ERROR);
+						error.setMessage("That email address already exists in the database");
+						error.open();
 					}
 					System.out.println("Recipient "+r.getFirstName()+" "+r.getLastName()+" received from add dialoge!");
 				}
@@ -92,7 +88,7 @@ public class ContactsWindow {
 		addButton.setBounds(10, 145, 75, 25);
 		addButton.setText("Add");
 		
-		Button deleteButton = new Button(shell, SWT.NONE);
+		Button deleteButton = new Button(shlContacts, SWT.NONE);
 		deleteButton.addSelectionListener(new SelectionAdapter() 
 		{
 			@Override
@@ -101,17 +97,16 @@ public class ContactsWindow {
 				MessageBox deleteMessage;
 				if(noneSelected())
 				{
-					deleteMessage=new MessageBox(shell);
+					deleteMessage=new MessageBox(shlContacts);
 					deleteMessage.setMessage("Must Select a contact first");
 					deleteMessage.open();
 				}
 				else
 				{
-					deleteMessage=new MessageBox(shell, SWT.YES|SWT.NO);
+					deleteMessage=new MessageBox(shlContacts, SWT.YES|SWT.NO);
 					deleteMessage.setMessage("Are you sure you want to delete the selected contacts? They will be permanently deleted from the database.");
 					if (deleteMessage.open()==SWT.YES)
 					{
-						System.out.println("ok I'm deleting your contacts");
 						//delete items from table
 						TableItem[] items=contactTable.getItems();
 						for (int i=0; i<items.length; i++)
@@ -140,28 +135,50 @@ public class ContactsWindow {
 		deleteButton.setBounds(10, 176, 75, 25);
 		deleteButton.setText("Delete");
 		
-		Button sendEmailButton = new Button(shell, SWT.NONE);
+		Button sendEmailButton = new Button(shlContacts, SWT.NONE);
 		sendEmailButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				ArrayList<String> emails=new ArrayList<String>();
-				TableItem [] cur=contactTable.getItems();
-				for (int i=0; i<cur.length; i++)
+				try
 				{
-					if (cur[i].getChecked())
-						emails.add(cur[i].getText(2));
+					UserInfo user=UserInfo.load();
+					ArrayList<String> emails=new ArrayList<String>();
+					TableItem [] cur=contactTable.getItems();
+					for (int i=0; i<cur.length; i++)
+					{
+						if (cur[i].getChecked())
+							emails.add(cur[i].getText(2));
+					}
+					MailWindow newwin=new MailWindow();
+					newwin.setDatabase(database);
+					newwin.setUserInfo(user);
+					newwin.setTo(emails);
+					DisposeListener ds=new DisposeListener(){
+						
+						@Override
+						public void widgetDisposed(DisposeEvent e) 
+						{
+							shlContacts.setEnabled(true);
+							
+						}};
+					newwin.setDisposeListener(ds);
+					shlContacts.setEnabled(false);
+					newwin.open();
 				}
-				MailWindow newwin=new MailWindow();
-				newwin.setTo(emails);
-				newwin.open();
+				catch (IOException ex)
+				{
+					MessageBox error=new MessageBox(shlContacts);
+					error.setMessage("Please enter an email address in settings before sending an email");
+					error.open();
+				}
 			}
 ;		});
 		sendEmailButton.setToolTipText("Send an email to the selected contacts");
 		sendEmailButton.setBounds(10, 207, 149, 44);
 		sendEmailButton.setText("Send Email");
 		
-		contactTable = new Table(shell, SWT.BORDER | SWT.CHECK | SWT.FULL_SELECTION);
+		contactTable = new Table(shlContacts, SWT.BORDER | SWT.CHECK | SWT.FULL_SELECTION);
 		contactTable.setBounds(10, 10, 435, 129);
 		contactTable.setHeaderVisible(true);
 		contactTable.setLinesVisible(true);
@@ -182,22 +199,22 @@ public class ContactsWindow {
 		previousYearTableColumn.setWidth(100);
 		previousYearTableColumn.setText("Previous Year?");
 		
-		final Combo sortByCombo = new Combo(shell, SWT.READ_ONLY);
+		final Combo sortByCombo = new Combo(shlContacts, SWT.READ_ONLY);
 		sortByCombo.setToolTipText("Sort the entries by first or last name");
 		sortByCombo.setItems(new String[] {"First Name", "Last Name", "Last Name, starting with"});
 		sortByCombo.setBounds(317, 178, 91, 23);
 		sortByCombo.setText("Sort By");
 		
-		letterText = new Text(shell, SWT.BORDER);
+		letterText = new Text(shlContacts, SWT.BORDER);
 		letterText.setEnabled(false);
 		letterText.setBounds(317, 230, 38, 21);
 		
-		final Label enterLetterLabel = new Label(shell, SWT.NONE);
+		final Label enterLetterLabel = new Label(shlContacts, SWT.NONE);
 		enterLetterLabel.setEnabled(false);
 		enterLetterLabel.setBounds(317, 209, 66, 15);
 		enterLetterLabel.setText("Enter letter");
 		
-		final Button okButton = new Button(shell, SWT.NONE);
+		final Button okButton = new Button(shlContacts, SWT.NONE);
 		okButton.addSelectionListener(new SelectionAdapter() 
 		{
 			@Override
@@ -205,7 +222,7 @@ public class ContactsWindow {
 			{
 				try
 				{
-					MessageBox ms=new MessageBox(shell, SWT.NONE);
+					MessageBox ms=new MessageBox(shlContacts, SWT.NONE);
 					String letter=letterText.getText();
 					if (letter.length()!=1)
 					{
@@ -237,6 +254,10 @@ public class ContactsWindow {
 		okButton.setEnabled(false);
 		okButton.setBounds(361, 230, 27, 25);
 		okButton.setText("Ok");
+		
+		Label lblSortBy = new Label(shlContacts, SWT.NONE);
+		lblSortBy.setBounds(317, 155, 55, 15);
+		lblSortBy.setText("Sort by");
 		sortByCombo.addModifyListener(new ModifyListener()
 		{
 			@Override
@@ -294,31 +315,6 @@ public class ContactsWindow {
 		});
 		//adding entries in the database to the contact table
 		addContactsToTable();
-		/*Hardcoded data to test the table with hardcoded values
-		TableItem newitem=new TableItem(contactTable, SWT.NONE, 0);
-		newitem.setText(0, "Spencer");
-		newitem.setText(1, "Tyree");
-		newitem.setText(2, "holycowrap@hotmail.com");
-		newitem.setText(3, "No");
-		
-		TableItem newitem2=new TableItem(contactTable, SWT.NONE, 1);
-		newitem2.setText(0, "John");
-		newitem2.setText(1, "Coppinger");
-		newitem2.setText(2, "johnknowsnothing@gmail.com");
-		newitem2.setText(3, "No");
-		
-		TableItem newitem3=new TableItem(contactTable, SWT.NONE, 2);
-		newitem3.setText(0, "Bin");
-		newitem3.setText(1, "Mei");
-		newitem3.setText(2, "billbinmei@hotmail.com");
-		newitem3.setText(3, "yes");
-		
-		TableItem newitem4=new TableItem(contactTable, SWT.NONE, 3);
-		newitem4.setText(0, "Zhenyu");
-		newitem4.setText(1, "Xia");
-		newitem4.setText(2, "zxia@eagles.ewu.edu");
-		newitem4.setText(3, "yes");
-		*/
 	}
 
 	/**

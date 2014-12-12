@@ -6,19 +6,23 @@ public class Yahoo extends MailService{
    
    public Yahoo(){}
    
-   public String getServiceName(){
+   public String getServiceName()
+   {
 	   return this.serviceName;
    }
    
-   public String getHostServerName(){
+   public String getHostServerName()
+   {
       return this.hostServerName;
    }
    
-   public int getPort(){
+   public int getPort()
+   {
       return this.port;
    }
    
-   public String toString(){
+   public String toString()
+   {
 	      return serviceName + ": "+ hostServerName + " Port: " + port;
    }
 }

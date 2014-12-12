@@ -20,7 +20,14 @@ public class SQLiteMailerJDB
 	{
 		
 		this.c = openConn();	
-		if(!this.doesUsersExist() )
+		
+		DatabaseMetaData md = c.getMetaData();
+		ResultSet rs = md.getTables(null, null, "USERS", null);
+		if(rs.next())
+		{
+			//we gucci, don't make users table
+		}
+		else
 		{
 			generateUSERS(c);
 		}
@@ -216,7 +223,6 @@ public class SQLiteMailerJDB
 				System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 				System.exit(0);
 			}
-		System.out.println("Opened database successfully\n\n");
 		
 		return c;
 	}	
@@ -247,16 +253,15 @@ public class SQLiteMailerJDB
 	 * if the directly above method returns false this method will generate the USERS table within the database.
 	 */
 	private void generateUSERS(Connection c)
-	{
-		
+	{		
 		try
 		{
 			Statement stmt = c.createStatement();
 			String sql = "CREATE TABLE USERS " +
 				  "(FNAME TEXT NOT NULL, " + 
-				  " LNAME TEXT PRIMARY KEY NOT NULL, " +
-				  " EMAIL TEXT NOT NULL, " +
-				  " PREVEMAIL INT NOT NULL)";
+				  " LNAME TEXT NOT NULL, " +
+				  " EMAIL TEXT PRIMARY KEY NOT NULL, " +
+				  " PREVEMAIL  INT NOT NULL)";
 			stmt.executeUpdate(sql);
 			stmt.close();
 		}catch (Exception e)
@@ -264,6 +269,7 @@ public class SQLiteMailerJDB
 			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 			//System.exit(0);
 		}
+		
 	}	
 	/*
 	 * makes an arraylist of recipients based on the passed in resultset

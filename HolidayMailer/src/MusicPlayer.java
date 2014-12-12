@@ -1,9 +1,8 @@
 import javazoom.jl.player.Player;
 import java.io.*;
-import java.util.*;
 public class MusicPlayer extends Thread
 {
-	private Player playMP3;
+	private Player playMP3=null;
 	private boolean play=true;
 	public void run()
 	{
@@ -24,7 +23,8 @@ public class MusicPlayer extends Thread
 	public void kill()
 	{
 		play=false;
-		playMP3.close();
+		if(playMP3!=null)
+			playMP3.close();
 	}
 	
 	public boolean getPlay()

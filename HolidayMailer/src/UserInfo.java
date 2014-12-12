@@ -1,4 +1,3 @@
-import java.util.*;
 import java.io.*;
 /**
  * 
@@ -53,7 +52,7 @@ public class UserInfo implements Serializable
       }
 	}
 
-	public static UserInfo load()
+	public static UserInfo load() throws IOException
 	{
 	  UserInfo read = null;
       try
@@ -63,16 +62,29 @@ public class UserInfo implements Serializable
          read = (UserInfo) in.readObject();
          in.close();
          fileIn.close();
-      }catch(IOException i)
-      {
-         i.printStackTrace();
-         //return;
-      }catch(ClassNotFoundException c)
+      }
+      catch(ClassNotFoundException c)
       {
          System.out.println("UserInfo class not found");
          c.printStackTrace();
          //return;
       }
       return read;
+	}
+	public String getCoverEmailText() 
+	{
+		return this.coverEmailText;
+	}
+	public String getEmailAddress() 
+	{
+		return this.userEmail;
+	}
+	public String getService() 
+	{
+		return this.service;
+	}
+	public String getProvider() 
+	{
+		return this.service;
 	}
 }

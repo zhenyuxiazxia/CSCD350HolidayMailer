@@ -1,12 +1,12 @@
 
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.events.DisposeEvent;
@@ -22,7 +22,6 @@ public class MainMenu
 	protected Display display;
 	protected SQLiteMailerJDB database;
 	protected MusicPlayer mp;
-	protected JavaMailer mailer;
 	/**
 	 * Launch the application.
 	 * @param args
@@ -35,11 +34,10 @@ public class MainMenu
 			MusicPlayer mp=new MusicPlayer();
 			mp.start();
 			MainMenu window = new MainMenu();
-			JavaMailer mailer=new JavaMailer();
 			database=new SQLiteMailerJDB();
 			window.setDatabase(database);
 			window.setPlayer(mp);
-			window.setMailer(mailer);
+
 			window.open();
 			database.closeConn();
 			mp.kill();
@@ -54,10 +52,6 @@ public class MainMenu
 		}
 	}
 
-	private void setMailer(JavaMailer mailer) 
-	{
-		this.mailer=mailer;
-	}
 
 	private void setPlayer(MusicPlayer mp2) 
 	{
@@ -94,7 +88,7 @@ public class MainMenu
 	{
 		shlHolidayMailer = new Shell();
 		shlHolidayMailer.setSize(450, 300);
-		shlHolidayMailer.setText("Holiday Mailer");
+		shlHolidayMailer.setText("Bits Please Holiday Mailer");
 		shlHolidayMailer.setLayout(null);
 		
 		Button mailButton = new Button(shlHolidayMailer, SWT.NONE);
@@ -103,19 +97,30 @@ public class MainMenu
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				MailWindow mailWindow=new MailWindow();
-				shlHolidayMailer.setEnabled(false);
-				DisposeListener ds=new DisposeListener(){
-
-					@Override
-					public void widgetDisposed(DisposeEvent e) 
-					{
-						shlHolidayMailer.setEnabled(true);
-						
-					}};
-				mailWindow.setDisposeListener(ds);
-				mailWindow.setDatabase(database);
-				mailWindow.open();
+				try
+				{
+					UserInfo user=UserInfo.load();
+					MailWindow mailWindow=new MailWindow();
+					shlHolidayMailer.setEnabled(false);
+					DisposeListener ds=new DisposeListener(){
+	
+						@Override
+						public void widgetDisposed(DisposeEvent e) 
+						{
+							shlHolidayMailer.setEnabled(true);
+							
+						}};
+					mailWindow.setDisposeListener(ds);
+					mailWindow.setDatabase(database);
+					mailWindow.setUserInfo(user);
+					mailWindow.open();
+				}
+				catch (IOException ex)
+				{
+					MessageBox error=new MessageBox(shlHolidayMailer);
+					error.setMessage("Please enter an email address in settings before sending an email");
+					error.open();
+				}
 				
 			}
 		});
@@ -131,13 +136,15 @@ public class MainMenu
 			{
 				ContactsWindow cw=new ContactsWindow();
 				shlHolidayMailer.setEnabled(false);
-				DisposeListener ds2=new DisposeListener(){
+				DisposeListener ds2=new DisposeListener()
+				{
 					@Override
 					public void widgetDisposed(DisposeEvent e) 
 					{
 						shlHolidayMailer.setEnabled(true);
 						
-					}};
+					}
+				};
 				cw.setDisposeListener(ds2);
 				cw.setDatabase(database);
 				cw.open();
@@ -166,7 +173,6 @@ public class MainMenu
 				shlHolidayMailer.setEnabled(false);
 				sw.setDisposeListener(ds3);
 				sw.setPlayer(mp);
-				sw.setMailer(mailer);
 				sw.open();
 			}
 		});
