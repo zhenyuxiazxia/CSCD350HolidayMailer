@@ -1,0 +1,33 @@
+
+
+Version:	3.5
+CmdLine:	C:\Users\Bin Mei\Dropbox\350 Bits Please Group Folder\Class Project - Holiday Mailer\FINALTURNIN100%\HolidayMailer\BitsPleaseHolidayMailer.exe --l4j-debug
+WOW64:		yes
+Working dir:	C:\Users\Bin Mei\Dropbox\350 Bits Please Group Folder\Class Project - Holiday Mailer\FINALTURNIN100%\HolidayMailer\.
+64-bit search:	SOFTWARE\JavaSoft\Java Runtime Environment...
+Check:		SOFTWARE\JavaSoft\Java Runtime Environment\1.7
+Check launcher:	C:\Program Files\Java\jre7\bin\javaw.exe (OK)
+Match:		1.7
+Check:		SOFTWARE\JavaSoft\Java Runtime Environment\1.7.0_67
+Check launcher:	C:\Program Files\Java\jre7\bin\javaw.exe (OK)
+Match:		1.7.0_67
+Check:		SOFTWARE\JavaSoft\Java Runtime Environment\1.8
+Check launcher:	C:\Program Files\Java\jre1.8.0_20\bin\javaw.exe (OK)
+Match:		1.8
+Check:		SOFTWARE\JavaSoft\Java Runtime Environment\1.8.0_20
+Check launcher:	C:\Program Files\Java\jre1.8.0_20\bin\javaw.exe (OK)
+Match:		1.8.0_20
+64-bit search:	SOFTWARE\JavaSoft\Java Development Kit...
+Check:		SOFTWARE\JavaSoft\Java Development Kit\1.7
+Ignore:		1.7
+Check:		SOFTWARE\JavaSoft\Java Development Kit\1.7.0_67
+Ignore:		1.7.0_67
+Check:		SOFTWARE\JavaSoft\Java Development Kit\1.8
+Ignore:		1.8
+Check:		SOFTWARE\JavaSoft\Java Development Kit\1.8.0_20
+Ignore:		1.8.0_20
+Runtime used:	1.8.0_20 (64-bit)
+Launcher:	C:\Program Files\Java\jre1.8.0_20\bin\javaw.exe
+Launcher args:	-jar "C:\Users\Bin Mei\Dropbox\350 Bits Please Group Folder\Class Project - Holiday Mailer\FINALTURNIN100%\HolidayMailer\BitsPleaseHolidayMailer.exe"
+Args length:	149/32768 chars
+Exit code:	0
